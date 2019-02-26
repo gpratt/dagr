@@ -337,6 +337,7 @@ class VarDictJavaEndToEnd
       maxThreads          = maxThreads
     )
 
+    val removeNoCoverageRows = new ShellCommand("awk", "{if (!($6 == \"0\" && $7 == \"0\")) print}") with PipeWithNoResources[Any,Any]
     val removeRefEqAltRows = if (allSites) Pipes.empty[Text] else new ShellCommand("awk", "{if ($6 != $7) print}") with PipeWithNoResources[Text, Text]
 
     val testAndStreamToVcf = normalBam match {
@@ -375,6 +376,6 @@ class VarDictJavaEndToEnd
 
     val sortVcf = new SortVcf(in = tmpVcf, out = out, dict = Some(dict))
 
-    root ==> (vardict | removeRefEqAltRows | testAndStreamToVcf > tmpVcf).withName("VarDictJavaPipeChain") ==> sortVcf ==> new DeleteFiles(tmpVcf)
+    root ==> (vardict | removeNoCoverageRows | removeRefEqAltRows | testAndStreamToVcf > tmpVcf).withName("VarDictJavaPipeChain") ==> sortVcf ==> new DeleteFiles(tmpVcf)
   }
 }
